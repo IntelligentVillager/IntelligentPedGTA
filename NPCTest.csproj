@@ -127,7 +127,6 @@
     <Compile Include="src\utils\SoundPlayer.cs" />
     <Compile Include="src\utils\Utils.cs" />
     <Compile Include="src\utils\Network.cs" />
-    <Compile Include="src\utils\GameSound.cs" />
     <Compile Include="src\utils\Logger.cs" />
   </ItemGroup>
   <ItemGroup>

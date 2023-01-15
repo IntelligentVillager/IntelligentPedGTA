@@ -77,7 +77,9 @@ namespace GTA.NPCTest
 
                 this.audioFileOutputPath += Guid.NewGuid().ToString() + ".wav";
                 this.dispatcher = Dispatcher.CurrentDispatcher;
-                GTA.UI.Notification.Show("init at " + currentDirectory);
+                Function.Call(Hash.SET_TEXT_FONT,2);
+
+                GTA.UI.Notification.Show("init at ~b~" + currentDirectory);
 
                 speechConfig = SpeechConfig.FromSubscription(speechKey, speechRegion);
                 speechConfig.SpeechRecognitionLanguage = "en-US";
@@ -116,7 +118,7 @@ namespace GTA.NPCTest
             ConfigManager.getInstance.setAccessToken(keyandtoken.Item2);
             this.dispatcher.BeginInvoke(new Action(() =>
             {
-                GTA.UI.Notification.Show("Socrates initialized successfully.");
+                GTA.UI.Notification.Show("~h~Socrates ~h~initialized ~h~successfully.");
             }));
         }
 
@@ -149,6 +151,11 @@ namespace GTA.NPCTest
 
                 foreach (Ped ped in pedList)
                 {
+                    if (!ped.IsAlive)
+                    {
+                        continue;
+                    }
+
                     if (ped.IsAmbientSpeechPlaying)
                     {
                         StopCurrentPlayingSpeech(ped);
@@ -203,7 +210,7 @@ namespace GTA.NPCTest
                 {
                     closestPed.Task.LookAt(Game.Player.Character);
                     this.currentTargetPed = closestPed;
-                    GTA.UI.Screen.ShowHelpText("Press T to talk \nto Abigail", 2000);
+                    GTA.UI.Screen.ShowHelpText("Press T to talk \nto ~p~Abigail", 2000);
 
                     //GTA.UI.Screen.ShowHelpText("Press T to talk \nto " + pedName, 2000);
                 } 
@@ -249,6 +256,8 @@ namespace GTA.NPCTest
                     isMicrophoneListening = true;
                     PlaySound();
                     this.currentTargetPed.Task.ChatTo(Game.Player.Character);
+                    Game.Player.Character.Task.ChatTo(this.currentTargetPed);
+
                     microPhoneNotificationHandle = GTA.UI.Notification.Show("Microphone starts listening");
                     ListenToMicrophone();
                 }
@@ -274,11 +283,6 @@ namespace GTA.NPCTest
                           GTA.UI.Screen.ShowSubtitle(speechRecognitionResult.Text, 2000);
                       }));
 
-                    if (currentTargetPed != null)
-                    {
-                        processMessage();
-                    }
-                    //SynthesizeAudioAsync("hey there baby! I love you man!");
                     Network.interactWithNode(speechRecognitionResult.Text, Utils.TEST_NODE_ID, OnInteractRespond);
                     break;
                 case ResultReason.NoMatch:
@@ -335,7 +339,7 @@ namespace GTA.NPCTest
                     synthesizer0.Dispose();
                     if (currentTargetPed != null)
                     {
-                        processMessage(speechText);
+                        ProcessMessage(speechText, e.Result.AudioDuration.TotalMilliseconds);
                     }
                 };
 
@@ -368,15 +372,14 @@ namespace GTA.NPCTest
             npc.Task.GoStraightTo(Game.Player.Character.Position);
         }
 
-        private void processMessage(string text = "")
+        private void ProcessMessage(string text = "", double duration = 3000)
         {
             try
             {
                 _ = dispatcher.BeginInvoke(new Action(() =>
                   {
                       this.isProcessingMessage = false;
-                      Logger.INFO("5 " + Thread.CurrentThread.ManagedThreadId.ToString() + this.audioFileOutputPath);
-                      GTA.UI.Screen.ShowSubtitle(text, 3000);
+                      GTA.UI.Screen.ShowSubtitle(text, (int)duration);
                   }), DispatcherPriority.Render);
 
                 if (this.currentTargetPed != null)
